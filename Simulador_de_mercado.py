@@ -12,8 +12,13 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# Configurar fuente que soporte emojis (Windows)
-plt.rcParams['font.family'] = 'Segoe UI Symbol'  
+# Configuración de fuentes multiplataforma
+import sys
+if sys.platform == "win32":
+    plt.rcParams['font.family'] = 'Segoe UI Symbol'
+else:
+    # Para Linux (Streamlit Cloud) usar fuente por defecto
+    plt.rcParams['font.family'] = 'DejaVu Sans'
 
 import streamlit as st
 
