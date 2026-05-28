@@ -411,24 +411,37 @@ def graficar_impuesto(a, b, c, d, P_eq, Q_eq, t, sobre_vendedores=True):
         ax.plot(Qn, max(0,Pv), 'o', color='#0891b2', ms=7, zorder=6, label=f'Precio vendedor  Pv={max(0,Pv):.2f}')
         
         if Pc > max(0,Pv):
-            # Línea vertical completa (fondo gris claro)
-            ax.vlines(Qn, ymin=max(0,Pv), ymax=Pc, colors='#cbd5e1', lw=3, alpha=0.5, zorder=3)
+            # Área completa de recaudación (fondo)
+            ax.fill_betweenx([max(0,Pv), Pc], 0, Qn, alpha=0.2, color=COLOR_RECAUD,
+                           label=f'Recaudación fiscal ${rec:.0f}')
             
-            # El punto P_eq divide la barra
-            # Desde Pv hasta P_eq = carga del vendedor
-            # Desde P_eq hasta Pc = carga del comprador
+            # Área de carga total del vendedor (hatch sin fondo)
             if P_eq > max(0,Pv):
-                ax.vlines(Qn, ymin=max(0,Pv), ymax=P_eq,
-                         colors='#3b82f6', lw=3, alpha=0.9, zorder=5,
-                         label=f'Carga vendedor ({pct_vendedor:.1f}%)')
+                ax.fill_betweenx([max(0,Pv), P_eq], 0, Qn, facecolor='none',
+                               hatch='///', edgecolor='#3b82f6', linewidth=1,
+                               label=f'Carga total vendedor ({pct_vendedor:.1f}%) = ${carga_vendedor*Qn:.0f}')
+            
+            # Área de carga total del comprador (hatch sin fondo)
+            if Pc > P_eq:
+                ax.fill_betweenx([P_eq, Pc], 0, Qn, facecolor='none',
+                               hatch='\\\\\\', edgecolor='#ef4444', linewidth=1,
+                               label=f'Carga total comprador ({pct_comprador:.1f}%) = ${carga_comprador*Qn:.0f}')
+            
+            # Líneas de carga por unidad (verticales en el borde)
+            if P_eq > max(0,Pv):
+                ax.vlines(Qn, ymin=max(0,Pv), ymax=P_eq, colors='#3b82f6', lw=4, 
+                         alpha=0.9, label=f'Carga por unidad vendedor = ${carga_vendedor:.2f}')
             
             if Pc > P_eq:
-                ax.vlines(Qn, ymin=P_eq, ymax=Pc,
-                         colors='#ef4444', lw=3, alpha=0.9, zorder=5,
-                         label=f'Carga comprador ({pct_comprador:.1f}%)')
+                ax.vlines(Qn, ymin=P_eq, ymax=Pc, colors='#ef4444', lw=4, 
+                         alpha=0.9, label=f'Carga por unidad comprador = ${carga_comprador:.2f}')
             
-            ax.fill_betweenx([max(0,Pv), Pc], 0, Qn, alpha=0.08, color=COLOR_RECAUD,
-                           label=f'Recaudación ${rec:.0f}')
+            # Flecha vertical indicando el impuesto por unidad
+            ax.annotate('', xy=(Qn * 0.3, max(0,Pv)), xytext=(Qn * 0.3, Pc),
+                       arrowprops=dict(arrowstyle='<->', color='#000000', lw=2),
+                       annotation_clip=False)
+            ax.text(Qn * 0.28, (max(0,Pv) + Pc)/2, f't = ${t:.2f}', 
+                   ha='right', va='center', fontsize=9, fontweight='bold')
         
         if Qn < Q_eq:
             Pd_n = (a-Qn)/b if b!=0 else Pc
@@ -455,7 +468,7 @@ def graficar_subsidio(a, b, c, d, P_eq, Q_eq, s):
     Pcs = (a-c-d*s)/(b+d); Qs = max(0,a-b*Pcs); Pvs = Pcs+s
     ct = s*Qs; dws = 0.5*s*abs(Qs-Q_eq)
     
-    # Calcular beneficios correctamente
+    # Calcular beneficios
     beneficio_comprador = P_eq - Pcs if P_eq > Pcs else 0
     beneficio_vendedor = Pvs - P_eq if Pvs > P_eq else 0
     
@@ -473,24 +486,37 @@ def graficar_subsidio(a, b, c, d, P_eq, Q_eq, s):
                 label=f'Precio vendedor  Pv={Pvs:.2f}')
         
         if Pvs > max(0,Pcs):
-            # Línea vertical completa (fondo gris claro)
-            ax.vlines(Qs, ymin=max(0,Pcs), ymax=Pvs, colors='#cbd5e1', lw=3, alpha=0.5, zorder=3)
+            # Área completa del costo fiscal (fondo)
+            ax.fill_betweenx([max(0,Pcs), Pvs], 0, Qs, alpha=0.2, color='#10b981',
+                           label=f'Costo fiscal total ${ct:.0f}')
             
-            # El punto P_eq divide la barra en dos partes
-            # Desde Pcs hasta P_eq = beneficio del comprador
-            # Desde P_eq hasta Pvs = beneficio del vendedor
+            # Área de beneficio total del comprador (hatch sin fondo)
             if P_eq > max(0,Pcs):
-                ax.vlines(Qs, ymin=max(0,Pcs), ymax=P_eq,
-                         colors='#059669', lw=3, alpha=0.9, zorder=5,
-                         label=f'Beneficio comprador ({pct_comprador:.1f}%)')
+                ax.fill_betweenx([max(0,Pcs), P_eq], 0, Qs, facecolor='none',
+                               hatch='///', edgecolor='#27CBD1', linewidth=1,
+                               label=f'Beneficio total comprador ({pct_comprador:.1f}%) = ${beneficio_comprador*Qs:.0f}')
+            
+            # Área de beneficio total del vendedor (hatch sin fondo)
+            if Pvs > P_eq:
+                ax.fill_betweenx([P_eq, Pvs], 0, Qs, facecolor='none',
+                               hatch='\\\\\\', edgecolor='#ef8c0c', linewidth=1,
+                               label=f'Beneficio total vendedor ({pct_vendedor:.1f}%) = ${beneficio_vendedor*Qs:.0f}')
+            
+            # Líneas de beneficio por unidad (verticales en el borde)
+            if P_eq > max(0,Pcs):
+                ax.vlines(Qs, ymin=max(0,Pcs), ymax=P_eq, colors='#27CBD1', lw=4,
+                         alpha=0.9, label=f'Beneficio por unidad comprador = ${beneficio_comprador:.2f}')
             
             if Pvs > P_eq:
-                ax.vlines(Qs, ymin=P_eq, ymax=Pvs,
-                         colors='#10b981', lw=3, alpha=0.9, zorder=5,
-                         label=f'Beneficio vendedor ({pct_vendedor:.1f}%)')
+                ax.vlines(Qs, ymin=P_eq, ymax=Pvs, colors='#ef8c0c', lw=4,
+                         alpha=0.9, label=f'Beneficio por unidad vendedor = ${beneficio_vendedor:.2f}')
             
-            ax.fill_betweenx([max(0,Pcs), Pvs], 0, Qs, alpha=0.08, color='#10b981',
-                           label=f'Costo fiscal ${ct:.0f}')
+            # Flecha vertical indicando el subsidio por unidad
+            ax.annotate('', xy=(Qs * 0.3, max(0,Pcs)), xytext=(Qs * 0.3, Pvs),
+                       arrowprops=dict(arrowstyle='<->', color='#000000', lw=2),
+                       annotation_clip=False)
+            ax.text(Qs * 0.28, (max(0,Pcs) + Pvs)/2, f'Subsidio s = ${s:.2f}', 
+                   ha='right', va='center', fontsize=9, fontweight='bold')
         
         if Qs > Q_eq:
             Pd_s = (a-Qs)/b if b!=0 else Pcs
@@ -515,7 +541,7 @@ def graficar_cuota(a, b, c, d, P_eq, Q_eq, cuota):
     ax.plot(Q_eq, P_eq, 'o', color=COLOR_EQ, ms=8, zorder=5, label=f'Equilibrio libre  P*={P_eq:.2f}')
     Pd = (a-cuota)/b if b!=0 else 0
     Po = (cuota-c)/d if d!=0 else 0
-    ax.axvline(cuota, color='#7c3aed', lw=2, label=f'Cuota = {cuota:.0f}')
+    ax.axvline(cuota, color="#d123b4", lw=2, label=f'Cuota = {cuota:.0f}')
     
     if Pd > 0: 
         ax.plot(cuota, Pd, 'D', color=COLOR_DEMANDA, ms=8, zorder=6, label=f'Pd = ${Pd:.2f}')
@@ -590,40 +616,93 @@ def graficar_elasticidad(a, b, P_A, Q_A, P_B, Q_B, P_eq, Q_eq):
 # ══════════════════════════════════════════════════════════════════
 
 def graficar_comparativo(escenarios_sel, datos):
-    """Barras lado a lado: Precio y Cantidad por escenario seleccionado."""
-    nombres  = [esc_d['nombre'] for esc_d in datos if esc_d['nombre'] in escenarios_sel]
-    precios  = [esc_d['precio']   for esc_d in datos if esc_d['nombre'] in escenarios_sel]
-    cantids  = [esc_d['cantidad'] for esc_d in datos if esc_d['nombre'] in escenarios_sel]
-    colores  = [esc_d['color']    for esc_d in datos if esc_d['nombre'] in escenarios_sel]
-
-    if not nombres:
+    """Barras para Precio y Cantidad. Para Impuesto y Subsidio muestra Pc y Pv por separado."""
+    
+    # Filtrar escenarios seleccionados
+    datos_fil = [d for d in datos if d['nombre'] in escenarios_sel]
+    
+    if not datos_fil:
         return None
-
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4.5))
-    x = np.arange(len(nombres)); w = 0.55
-
+    
+    # Para Impuesto y Subsidio, crear entradas separadas para Pc y Pv
+    expanded_data = []
+    for d in datos_fil:
+        if d['nombre'] == 'Impuesto' and 'precio_comprador' in d and 'precio_vendedor' in d:
+            # Impuesto: dos barras
+            expanded_data.append({
+                'nombre': 'Impuesto (Pc)',
+                'precio': d['precio_comprador'],
+                'cantidad': d['cantidad'],
+                'color': '#ef4444'  # rojo para comprador
+            })
+            expanded_data.append({
+                'nombre': 'Impuesto (Pv)',
+                'precio': d['precio_vendedor'],
+                'cantidad': d['cantidad'],
+                'color': '#3b82f6'  # azul para vendedor
+            })
+        elif d['nombre'] == 'Subsidio' and 'precio_comprador' in d and 'precio_vendedor' in d:
+            # Subsidio: dos barras
+            expanded_data.append({
+                'nombre': 'Subsidio (Pc)',
+                'precio': d['precio_comprador'],
+                'cantidad': d['cantidad'],
+                'color': '#ef4444'  # rojo para comprador
+            })
+            expanded_data.append({
+                'nombre': 'Subsidio (Pv)',
+                'precio': d['precio_vendedor'],
+                'cantidad': d['cantidad'],
+                'color': '#3b82f6'  # azul para vendedor
+            })
+        else:
+            # Resto de escenarios: una barra
+            expanded_data.append({
+                'nombre': d['nombre'],
+                'precio': d['precio'],
+                'cantidad': d['cantidad'],
+                'color': d['color']
+            })
+    
+    nombres = [item['nombre'] for item in expanded_data]
+    precios = [item['precio'] for item in expanded_data]
+    cantids = [item['cantidad'] for item in expanded_data]
+    colores = [item['color'] for item in expanded_data]
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    x = np.arange(len(nombres))
+    w = 0.55
+    
+    # Gráfico de Precios
     bars1 = ax1.bar(x, precios, width=w, color=colores, alpha=0.82,
                     edgecolor='white', linewidth=1.5)
     for bar, v in zip(bars1, precios):
         ax1.text(bar.get_x()+bar.get_width()/2, bar.get_height()+max(precios)*0.01,
-                 f'${v:.2f}', ha='center', va='bottom', fontsize=8, fontweight='bold')
-    ax1.set_xticks(x); ax1.set_xticklabels(nombres, rotation=20, ha='right', fontsize=8)
+                 f'${v:.2f}', ha='center', va='bottom', fontsize=7, fontweight='bold', rotation=90)
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(nombres, rotation=25, ha='right', fontsize=7)
     ax1.set_ylabel('Precio ($)', fontsize=10)
     ax1.set_title('Precio de mercado por escenario', fontsize=12, fontweight='bold', color='#111827')
-    ax1.grid(True, axis='y', alpha=0.25, ls='--'); ax1.spines['top'].set_visible(False)
-    ax1.spines['right'].set_visible(False); ax1.set_ylim(0, max(precios)*1.2)
-
+    ax1.grid(True, axis='y', alpha=0.25, ls='--')
+    ax1.spines['top'].set_visible(False)
+    ax1.spines['right'].set_visible(False)
+    ax1.set_ylim(0, max(precios)*1.2)
+    
+    # Gráfico de Cantidades
     bars2 = ax2.bar(x, cantids, width=w, color=colores, alpha=0.82,
                     edgecolor='white', linewidth=1.5)
     for bar, v in zip(bars2, cantids):
         ax2.text(bar.get_x()+bar.get_width()/2, bar.get_height()+max(cantids)*0.01,
-                 f'{v:.0f}', ha='center', va='bottom', fontsize=8, fontweight='bold')
-    ax2.set_xticks(x); ax2.set_xticklabels(nombres, rotation=20, ha='right', fontsize=8)
+                 f'{v:.0f}', ha='center', va='bottom', fontsize=7, fontweight='bold')
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(nombres, rotation=25, ha='right', fontsize=7)
     ax2.set_ylabel('Cantidad', fontsize=10)
     ax2.set_title('Cantidad transada por escenario', fontsize=12, fontweight='bold', color='#111827')
-    ax2.grid(True, axis='y', alpha=0.25, ls='--'); ax2.spines['top'].set_visible(False)
-    ax2.spines['right'].set_visible(False); ax2.set_ylim(0, max(cantids)*1.2)
-
+    ax2.grid(True, axis='y', alpha=0.25, ls='--')
+    ax2.spines['top'].set_visible(False)
+    ax2.spines['right'].set_visible(False)
+    ax2.set_ylim(0, max(cantids)*1.2)
+    
     fig.tight_layout(pad=2.5)
     return fig
 
@@ -909,28 +988,91 @@ def generar_pdf(params):
     # ── SECCIÓN 5: COMPARATIVO ───────────────────────────────────
     story.append(PageBreak())
     story.append(Paragraph("5. Tabla Comparativa de Escenarios", es['h1']))
+
+    # Construir filas para la tabla PDF con Pc y Pv separados
     filas_cmp = [
-        ['Escenario','Precio ($)','Cantidad','Escasez/Excedente','Recaudación/Costo','Pérdida Social'],
-        ['Mercado libre',
-         f"${params['P_eq']:.2f}", f"{params['Q_eq']:.0f}", '—', '—', '—'],
-        ['P. Máximo',
-         f"${pm['P_max']:.2f}", f"{pm['Qo']:.0f}",
-         f"{pm['escasez']:.0f} esc." if pm['efectivo'] else '—', '—', '—'],
-        ['P. Mínimo',
-         f"${pn['P_min']:.2f}", f"{pn['Qd']:.0f}",
-         f"{pn['excedente']:.0f} exc." if pn['efectivo'] else '—', '—', '—'],
-        ['Impuesto',
-         f"${imp['Pc']:.2f}", f"{imp['Q']:.0f}", '—',
-         f"${imp['recaudacion']:.0f}", f"${imp['perdida']:.0f}"],
-        ['Subsidio',
-         f"${sub['Pc']:.2f}", f"{sub['Q']:.0f}", '—',
-         f"${sub['costo']:.0f}", '—'],
-        ['Cuota',
-         f"${cuo['Pd']:.2f}", f"{cuo['cuota']:.0f}", '—',
-         f"${cuo['renta_total']:.0f} renta", '—'],
+        ['Escenario', 'Precio ($)', 'Cantidad', 'Escasez/Excedente', 'Recaudación/Costo', 'Pérdida Social']
     ]
+
+    # Mercado libre
+    filas_cmp.append([
+        'Mercado libre',
+        f"${params['P_eq']:.2f}",
+        f"{params['Q_eq']:.0f}",
+        '—', '—', '—'
+    ])
+
+    # Precio Máximo
+    pm = params['precio_max']
+    filas_cmp.append([
+        'P. Máximo',
+        f"${pm['P_max']:.2f}",
+        f"{pm['Qo']:.0f}",
+        f"{pm['escasez']:.0f} esc." if pm['efectivo'] else '—',
+        '—', '—'
+    ])
+
+    # Precio Mínimo
+    pn = params['precio_min']
+    filas_cmp.append([
+        'P. Mínimo',
+        f"${pn['P_min']:.2f}",
+        f"{pn['Qd']:.0f}",
+        f"{pn['excedente']:.0f} exc." if pn['efectivo'] else '—',
+        '—', '—'
+    ])
+
+    # Impuesto - dos filas (Pc y Pv)
+    imp = params['impuesto']
+    filas_cmp.append([
+        'Impuesto (Pc)',
+        f"${imp['Pc']:.2f}",
+        f"{imp['Q']:.0f}",
+        '—',
+        f"${imp['recaudacion']:.0f} (recaudación)",
+        f"${imp['perdida']:.0f}"
+    ])
+    filas_cmp.append([
+        'Impuesto (Pv)',
+        f"${imp['Pv']:.2f}",
+        f"{imp['Q']:.0f}",
+        '—',
+        f"${imp['recaudacion']:.0f} (recaudación)",
+        f"${imp['perdida']:.0f}"
+    ])
+
+    # Subsidio - dos filas (Pc y Pv)
+    sub = params['subsidio']
+    filas_cmp.append([
+        'Subsidio (Pc)',
+        f"${sub['Pc']:.2f}",
+        f"{sub['Q']:.0f}",
+        '—',
+        f"${sub['costo']:.0f} (costo)",
+        '—'
+    ])
+    filas_cmp.append([
+        'Subsidio (Pv)',
+        f"${sub['Pv']:.2f}",
+        f"{sub['Q']:.0f}",
+        '—',
+        f"${sub['costo']:.0f} (costo)",
+        '—'
+    ])
+
+    # Cuota
+    cuo = params['cuota']
+    filas_cmp.append([
+        'Cuota',
+        f"${cuo['Pd']:.2f}",
+        f"{cuo['cuota']:.0f}",
+        '—',
+        f"${cuo['renta_total']:.0f} (renta)",
+        '—'
+    ])
+
     story.append(_tabla_datos(filas_cmp,
-                              col_widths=[W*0.17,W*0.13,W*0.13,W*0.18,W*0.20,W*0.19]))
+                            col_widths=[W*0.17, W*0.13, W*0.13, W*0.18, W*0.20, W*0.19]))
 
     # ── SECCIÓN 6: CONCLUSIONES ──────────────────────────────────
     story.append(PageBreak())
@@ -1339,33 +1481,68 @@ _Q_imp  = max(0.0, a-b*_Pc_imp)
 _P_cuota_val = (a-cuota)/b if b!=0 and 'cuota' in dir() else P_eq_original
 _cuota_val   = cuota if 'cuota' in dir() else Q_eq_original
 
+# Calcular valores para Impuesto
+if 't' in dir():
+    _Pc_imp = (a-c+d*t)/(b+d)
+    _Pv_imp = _Pc_imp - t
+    _Q_imp = max(0.0, a-b*_Pc_imp)
+    _perdida_imp = 0.5*t*abs(Q_eq_original-_Q_imp)
+else:
+    _Pc_imp = P_eq_original
+    _Pv_imp = P_eq_original
+    _Q_imp = Q_eq_original
+    _perdida_imp = 0
+
+# Calcular valores para Subsidio
+if 's' in dir():
+    _Pc_sub = (a-c-d*s)/(b+d)
+    _Pc_sub = max(0, _Pc_sub)
+    _Pv_sub = _Pc_sub + s
+    _Q_sub = max(0.0, a-b*_Pc_sub)
+    _perdida_sub = 0.5*s*abs(_Q_sub - Q_eq_original)
+else:
+    _Pc_sub = P_eq_original
+    _Pv_sub = P_eq_original
+    _Q_sub = Q_eq_original
+    _perdida_sub = 0
+
 datos_esc = [
-    {'nombre':'Mercado libre', 'precio':P_eq_original,        'cantidad':Q_eq_original,
-     'escasez':0,'excedente':0,'recaudacion':0,'perdida':0,
+    {'nombre':'Mercado libre', 'precio':P_eq_original, 'cantidad':Q_eq_original,
+     'escasez':0, 'excedente':0, 'recaudacion':0, 'perdida':0,
      'color':'#1a56db'},
+    
     {'nombre':'Precio Máximo', 'precio':P_max if 'P_max' in dir() else P_eq_original*0.6,
      'cantidad':max(0,c+d*(P_max if 'P_max' in dir() else P_eq_original*0.6)),
-     'escasez':escasez if 'escasez' in dir() else 0,'excedente':0,'recaudacion':0,'perdida':0,
+     'escasez':escasez if 'escasez' in dir() else 0, 'excedente':0, 'recaudacion':0, 'perdida':0,
      'color':'#ef4444'},
+    
     {'nombre':'Precio Mínimo', 'precio':P_min if 'P_min' in dir() else P_eq_original*1.4,
      'cantidad':max(0,a-b*(P_min if 'P_min' in dir() else P_eq_original*1.4)),
-     'escasez':0,'excedente':excedente if 'excedente' in dir() else 0,'recaudacion':0,'perdida':0,
+     'escasez':0, 'excedente':excedente if 'excedente' in dir() else 0, 'recaudacion':0, 'perdida':0,
      'color':'#16a34a'},
-    {'nombre':'Impuesto',      'precio':_Pc_imp, 'cantidad':_Q_imp,
-     'escasez':0,'excedente':0,
+    
+    {'nombre':'Impuesto', 'precio':_Pc_imp,
+     'precio_comprador':_Pc_imp,
+     'precio_vendedor':_Pv_imp,
+     'cantidad':_Q_imp,
+     'escasez':0, 'excedente':0,
      'recaudacion':t*_Q_imp if 't' in dir() else 0,
-     'perdida':0.5*(t if 't' in dir() else 0)*abs(Q_eq_original-_Q_imp),
+     'perdida':_perdida_imp,
      'color':'#7e3af2'},
-    {'nombre':'Subsidio',      'precio':max(0,P_eq_subs) if 'P_eq_subs' in dir() else P_eq_original,
-     'cantidad':Q_eq_subs if 'Q_eq_subs' in dir() else Q_eq_original,
-     'escasez':0,'excedente':0,
+    
+    {'nombre':'Subsidio', 'precio':_Pc_sub,
+     'precio_comprador':_Pc_sub,
+     'precio_vendedor':_Pv_sub,
+     'cantidad':_Q_sub,
+     'escasez':0, 'excedente':0,
      'recaudacion':-(costo_fiscal if 'costo_fiscal' in dir() else 0),
-     'perdida':0.5*(s if 's' in dir() else 0)*abs(Q_eq_subs - Q_eq_original) if 's' in dir() and 'Q_eq_subs' in dir() else 0,
+     'perdida':_perdida_sub,
      'color':'#0891b2'},
-    {'nombre':'Cuota',         'precio':max(0,_P_cuota_val),
-     'cantidad':_cuota_val,
-     'escasez':0,'excedente':0,'recaudacion':0,
-     'perdida':0.5 * max(0, (a-_cuota_val)/b - (_cuota_val-c)/d) * (Q_eq_original - _cuota_val) if 'cuota' in dir() and _cuota_val < Q_eq_original else 0,
+    
+    {'nombre':'Cuota', 'precio':max(0, (a-cuota)/b) if 'cuota' in dir() and b!=0 else P_eq_original,
+     'cantidad':cuota if 'cuota' in dir() else Q_eq_original,
+     'escasez':0, 'excedente':0, 'recaudacion':0,
+     'perdida':0.5 * max(0, (a-cuota)/b - (cuota-c)/d) * (Q_eq_original - cuota) if 'cuota' in dir() and cuota < Q_eq_original else 0,
      'color':'#e3a008'},
 ]
 
@@ -1378,16 +1555,30 @@ if sel:
 
     # Tabla resumen
     st.markdown("#### Tabla comparativa")
-    filas_tabla = [["Escenario","Precio ($)","Cantidad","Escasez / Excedente","Recaudación / Costo","Pérdida Social"]]
+    filas_tabla = [["Escenario", "Precio", "Cantidad", "Escasez / Excedente", "Recaudación / Costo", "Pérdida Social"]]
+
     for esc_d in datos_fil:
         esc_exc = (f"Esc. {esc_d['escasez']:.0f}" if esc_d['escasez']>0 else
-                   f"Exc. {esc_d['excedente']:.0f}" if esc_d['excedente']>0 else "—")
+                f"Exc. {esc_d['excedente']:.0f}" if esc_d['excedente']>0 else "—")
         rec = f"${abs(esc_d['recaudacion']):.0f}" + (" ❌" if esc_d['recaudacion']<0 else "")
+        
+        # Construir el texto del precio según el tipo de escenario
+        if esc_d['nombre'] == 'Impuesto' and 'precio_comprador' in esc_d and 'precio_vendedor' in esc_d:
+            precio_texto = f"Pc={esc_d['precio_comprador']:.2f} / Pv={esc_d['precio_vendedor']:.2f}"
+        elif esc_d['nombre'] == 'Subsidio' and 'precio_comprador' in esc_d and 'precio_vendedor' in esc_d:
+            precio_texto = f"Pc={esc_d['precio_comprador']:.2f} / Pv={esc_d['precio_vendedor']:.2f}"
+        else:
+            precio_texto = f"${esc_d['precio']:.2f}"
+        
         filas_tabla.append([
-            esc_d['nombre'], f"${esc_d['precio']:.2f}", f"{esc_d['cantidad']:.0f}",
-            esc_exc, rec if esc_d['recaudacion']!=0 else "—",
+            esc_d['nombre'], 
+            precio_texto,
+            f"{esc_d['cantidad']:.0f}",
+            esc_exc, 
+            rec if esc_d['recaudacion']!=0 else "—",
             f"${esc_d['perdida']:.0f}" if esc_d['perdida']>0 else "—"
         ])
+
     # Renderizar como tabla markdown
     hdr = "| " + " | ".join(filas_tabla[0]) + " |"
     sep = "| " + " | ".join(["---"]*len(filas_tabla[0])) + " |"
@@ -1401,14 +1592,87 @@ if sel:
 
     # Métricas rápidas
     st.markdown("#### Resumen rápido")
-    n_col = min(len(datos_fil), 6)
-    cols_comp = st.columns(n_col)
-    for i, esc_d in enumerate(datos_fil[:n_col]):
-        with cols_comp[i]:
-            delta_p = esc_d['precio'] - P_eq_original
-            st.metric(esc_d['nombre'], f"${esc_d['precio']:.2f}",
-                      delta=f"{delta_p:+.2f} vs libre",
-                      delta_color="inverse" if delta_p>0 else "normal")
+
+    # Crear lista expandida igual que en el gráfico
+    expanded_metrics = []
+    for esc_d in datos_fil:
+        if esc_d['nombre'] == 'Impuesto' and 'precio_comprador' in esc_d and 'precio_vendedor' in esc_d:
+            expanded_metrics.append({
+                'nombre': 'Impuesto (Pc)',
+                'precio': esc_d['precio_comprador'],
+                'precio_referencia': P_eq_original,  # Para comparación
+                'cantidad': esc_d['cantidad'],
+                'perdida': esc_d['perdida'],
+                'recaudacion': esc_d['recaudacion'],
+                'color': '#ef4444'
+            })
+            expanded_metrics.append({
+                'nombre': 'Impuesto (Pv)',
+                'precio': esc_d['precio_vendedor'],
+                'precio_referencia': P_eq_original,
+                'cantidad': esc_d['cantidad'],
+                'perdida': esc_d['perdida'],
+                'recaudacion': esc_d['recaudacion'],
+                'color': '#3b82f6'
+            })
+        elif esc_d['nombre'] == 'Subsidio' and 'precio_comprador' in esc_d and 'precio_vendedor' in esc_d:
+            expanded_metrics.append({
+                'nombre': 'Subsidio (Pc)',
+                'precio': esc_d['precio_comprador'],
+                'precio_referencia': P_eq_original,
+                'cantidad': esc_d['cantidad'],
+                'perdida': esc_d['perdida'],
+                'recaudacion': esc_d['recaudacion'],
+                'color': '#ef4444'
+            })
+            expanded_metrics.append({
+                'nombre': 'Subsidio (Pv)',
+                'precio': esc_d['precio_vendedor'],
+                'precio_referencia': P_eq_original,
+                'cantidad': esc_d['cantidad'],
+                'perdida': esc_d['perdida'],
+                'recaudacion': esc_d['recaudacion'],
+                'color': '#3b82f6'
+            })
+        else:
+            expanded_metrics.append({
+                'nombre': esc_d['nombre'],
+                'precio': esc_d['precio'],
+                'precio_referencia': P_eq_original,
+                'cantidad': esc_d['cantidad'],
+                'perdida': esc_d.get('perdida', 0),
+                'recaudacion': esc_d.get('recaudacion', 0),
+                'color': esc_d['color']
+            })
+
+    # Mostrar métricas en 2 filas de 4 columnas cada una
+    for fila in range(2):  # 2 filas
+        cols = st.columns(4)  # 4 columnas por fila
+        for col in range(4):  # 4 elementos por fila
+            idx = fila * 4 + col
+            if idx < len(expanded_metrics):
+                item = expanded_metrics[idx]
+                with cols[col]:
+                    delta_p = item['precio'] - item['precio_referencia']
+                    
+                    # Todos los elementos muestran la misma estructura
+                    st.metric(
+                        item['nombre'],
+                        f"${item['precio']:.2f}",
+                        delta=f"{delta_p:+.2f}" if delta_p != 0 else "—",
+                        delta_color="inverse" if delta_p > 0 else "normal"
+                    )
+                    # Mostrar cantidad como caption (no en el delta)
+                    st.caption(f"Q={item['cantidad']:.0f}")
+                    
+                    # Información adicional según el tipo
+                    if item['perdida'] > 0:
+                        st.caption(f"📉 DWL: ${item['perdida']:.0f}")
+                    if item['recaudacion'] != 0:
+                        if item['recaudacion'] > 0:
+                            st.caption(f"💰 Recaudación: ${item['recaudacion']:.0f}")
+                        else:
+                            st.caption(f"💸 Costo: ${abs(item['recaudacion']):.0f}")
 else:
     st.info("Seleccioná al menos un escenario para ver la comparación.")
 
