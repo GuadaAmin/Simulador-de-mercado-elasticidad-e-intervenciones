@@ -515,7 +515,7 @@ def graficar_subsidio(a, b, c, d, P_eq, Q_eq, s):
             ax.annotate('', xy=(Qs * 0.3, max(0,Pcs)), xytext=(Qs * 0.3, Pvs),
                        arrowprops=dict(arrowstyle='<->', color='#000000', lw=2),
                        annotation_clip=False)
-            ax.text(Qs * 0.28, (max(0,Pcs) + Pvs)/2, f'Subsidio s = ${s:.2f}', 
+            ax.text(Qs * 0.28, (max(0,Pcs) + Pvs)/2, f's = ${s:.2f}', 
                    ha='right', va='center', fontsize=9, fontweight='bold')
         
         if Qs > Q_eq:
